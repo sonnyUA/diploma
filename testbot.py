@@ -43,8 +43,8 @@ def send_welcome(message):
     #     bot.reply_to(message, "Вже зареєстрований")
     # except KeyError:
     msg = bot.reply_to(message, "За командою /register ви можете зареєструватися.\nЗа командою /account ви можете переглянути ваші дані.\n\
-    За командою /order ви можете створити замовлення.\nЗа командою /my_orders ви можете переглянути свої замовлення.\n\
-    За командою /delete_order ви можете видалити ваше замовлення.")
+За командою /order ви можете створити замовлення.\nЗа командою /my_orders ви можете переглянути свої замовлення.\n\
+За командою /delete_order ви можете видалити ваше замовлення.")
 
 
 # /register
@@ -151,6 +151,14 @@ def send_account(message):
 # /order
 @bot.message_handler(commands=['order'])
 def start_order(message):
+    sql=f'SELECT id FROM users WHERE tg_user_id = {message.chat.id}'
+    cursor.execute(sql)
+    check_user_availability=cursor.fetchall()
+    # check_user_availability=cursor.fetchall()[0][0]
+    if not check_user_availability:
+        bot.send_message(message.chat.id, 'Ви ще не зареєстровані!')
+        send_welcome(message)
+        return
     cursor.execute(f'SELECT reports FROM users WHERE tg_user_id={message.chat.id} ')
     reports=cursor.fetchall()
     if reports>9:
