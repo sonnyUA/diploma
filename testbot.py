@@ -254,6 +254,14 @@ def db_orders_insert(chat_id: int, user_id: int, order_desc: str, order_urgency_
 # /my_orders
 @bot.message_handler(commands=['my_orders'])
 def my_orders(message):
+    sql=f'SELECT id FROM users WHERE tg_user_id = {message.chat.id}'
+    cursor.execute(sql)
+    check_user_availability=cursor.fetchall()
+    # check_user_availability=cursor.fetchall()[0][0]
+    if not check_user_availability:
+        bot.send_message(message.chat.id, 'Ви ще не зареєстровані!')
+        send_welcome(message)
+        return
     select_orders=f'SELECT orders.order_id, orders.order_desc, orders.order_status, regions.region_description, order_urgency.odred_urgency_desc \
     FROM orders join users on orders.user_id = users.id join regions on orders.region_id = regions.region_id \
     join order_urgency on orders.order_urgency_id = order_urgency.order_urgency_id WHERE users.tg_user_id = {message.chat.id}'
@@ -265,6 +273,14 @@ def my_orders(message):
 # /delete_order
 @bot.message_handler(commands=['delete_order'])
 def delete_order(message):
+    sql=f'SELECT id FROM users WHERE tg_user_id = {message.chat.id}'
+    cursor.execute(sql)
+    check_user_availability=cursor.fetchall()
+    # check_user_availability=cursor.fetchall()[0][0]
+    if not check_user_availability:
+        bot.send_message(message.chat.id, 'Ви ще не зареєстровані!')
+        send_welcome(message)
+        return
     select_orders=f'SELECT orders.order_id, orders.order_desc, orders.order_status, regions.region_description, order_urgency.odred_urgency_desc \
     FROM orders join users on orders.user_id = users.id join regions on orders.region_id = regions.region_id \
     join order_urgency on orders.order_urgency_id = order_urgency.order_urgency_id \
