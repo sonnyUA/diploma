@@ -44,7 +44,7 @@ def send_welcome(message):
     # except KeyError:
     msg = bot.reply_to(message, "За командою /register ви можете зареєструватися.\nЗа командою /account ви можете переглянути ваші дані.\n\
 За командою /order ви можете створити замовлення.\nЗа командою /my_orders ви можете переглянути свої замовлення.\n\
-За командою /delete_order ви можете видалити ваше замовлення.")
+За командою /delete_order ви можете видалити ваше замовлення.", reply_markup=types.ReplyKeyboardRemove())
 
 
 # /register
@@ -55,7 +55,7 @@ def send_register(message):
     check_user_availability=cursor.fetchall()
     # check_user_availability=cursor.fetchall()[0][0]
     if check_user_availability:
-        bot.send_message(message.chat.id, 'Ви вже зареєстровані!')
+        bot.send_message(message.chat.id, 'Ви вже зареєстровані!', reply_markup=types.ReplyKeyboardRemove())
         return
     msg = bot.reply_to(message, "Введіть своє ім'я (без прізвища)")
     bot.register_next_step_handler(msg, process_firstname_step)
@@ -63,6 +63,10 @@ def send_register(message):
 
 def process_firstname_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         first_name = message.text
         user = User(first_name)
@@ -75,6 +79,10 @@ def process_firstname_step(message):
 
 def process_lastname_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         last_name = message.text
         user = user_dict[chat_id]
@@ -87,6 +95,10 @@ def process_lastname_step(message):
 
 def process_age_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         age = message.text
         user = user_dict[chat_id]
@@ -103,7 +115,6 @@ def process_age_step(message):
                 bot.send_message(chat_id, 'Ви занадто молоді для використання бота')
                 return
         except:
-            # print("Incorrect date!")
             bot.send_message(chat_id, 'Введіть дату в коректному форматі')
             bot.register_next_step_handler(message, process_age_step)
             return
@@ -115,7 +126,6 @@ def process_age_step(message):
 def add_user_to_table(chat_id):
     try:
         user = user_dict[chat_id]
-        print(user_dict)
         firstname = user.first_name
         lastname = user.last_name
         age = user.age
@@ -146,7 +156,7 @@ def send_account(message):
     cursor.execute(sql)
     user = cursor.fetchall()
     reply = f"Ім'я: {user[0][0]} \nПрізвище: {user[0][1]} \nДата народження: {user[0][2]}"
-    msg = bot.reply_to(message, reply)
+    msg = bot.reply_to(message, reply, reply_markup=types.ReplyKeyboardRemove())
     
 # /order
 @bot.message_handler(commands=['order'])
@@ -167,11 +177,15 @@ def start_order(message):
         return
     msg = bot.reply_to(message, "Стисло вкажіть, чого ви потребуєте. Рекомендуємо робити роздільні замовлення для окремих типів речей.\
         Наприклад: в окремому замовленні вкажіть усі ліки, в іншому замовленні вкажіть їжу якої потребуєте, \
-        в третьому замовленні вкажіть одяг, якого вам не вистачає.")
+        в третьому замовленні вкажіть одяг, якого вам не вистачає.", reply_markup=types.ReplyKeyboardRemove())
     bot.register_next_step_handler(msg, process_urgency_order_step)
 
 def process_urgency_order_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         order_dict[chat_id] = Order(message.text)
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -184,6 +198,10 @@ def process_urgency_order_step(message):
 
 def process_next_order_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         order_urg = message.text
         order = order_dict[chat_id]
@@ -208,6 +226,10 @@ def process_next_order_step(message):
 
 def process_order_region_step(message):
     try:
+        command = check_command(message)
+        if command:
+            command(message)
+            return
         chat_id = message.chat.id
         sql=f'SELECT region_id FROM regions'
         cursor.execute(sql)
@@ -293,6 +315,10 @@ def delete_order(message):
     bot.register_next_step_handler(msg, process_delete_order_step)
 
 def process_delete_order_step(message):
+    command = check_command(message)
+    if command:
+        command(message)
+        return
     select_orders=f'SELECT orders.order_id, orders.order_desc, orders.order_status, regions.region_description, order_urgency.odred_urgency_desc \
     FROM orders join users on orders.user_id = users.id join regions on orders.region_id = regions.region_id \
     join order_urgency on orders.order_urgency_id = order_urgency.order_urgency_id WHERE users.tg_user_id = {message.chat.id}'
@@ -310,6 +336,10 @@ def process_delete_order_step(message):
         bot.register_next_step_handler(msg, process_delete_order_step)
 
 def process_confirm_delete_order_step(message):
+    command = check_command(message)
+    if command:
+        command(message)
+        return
     if message.text == 'Так':
         order_id = order_delete_dict[message.chat.id]
         select_volunteer=f'SELECT volunteers.tg_volunteer_id \
@@ -329,8 +359,19 @@ def process_confirm_delete_order_step(message):
         cursor.execute(delete_order_sql)
         conn.commit()
         order_delete_dict.pop(message.chat.id)
-        bot.reply_to(message, 'Замовлення видалено.')
-       
+        bot.reply_to(message, 'Замовлення видалено.', reply_markup=types.ReplyKeyboardRemove())
+
+
+def check_command(message):
+    try:
+        command = cmd_list[message.text]
+        return command
+    except KeyError:
+        return None
+
+cmd_list={'/start': send_welcome, '/help': send_welcome, '/register': send_register, \
+    '/order': start_order, '/my_orders': my_orders, '/account': send_account, \
+    '/delete_order': delete_order}
 
 
  #Enable saving next step handlers to file "./.handlers-saves/step.save".
