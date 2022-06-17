@@ -63,7 +63,14 @@ def callback_query(call):
 @bot.message_handler(commands=['help'])
 def process_help(message):
     chat_id=message.chat.id
-    bot.send_message(chat_id, 'Blah', reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(chat_id, '/start - почати роботу з ботом\
+\n/help - переглянути список команд\
+\n/register - реєстрація\
+\n/orders - переглянути замовлення\
+\n/my_orders - ваші активні замовлення\
+\n/finished_orders - ваші завершені замовлення\
+\n/close_order - завершити замовлення\
+\n/remove_order - відмовитись від замовлення', reply_markup=types.ReplyKeyboardRemove())
 
 # /start
 @bot.message_handler(commands=['start'])
